@@ -124,11 +124,11 @@ metadata:
   labels:
     app: lnd
 spec:
+  type: LoadBalancer
   selector:
     app: lnd
   ports:
   - port: 9735
     name: lnd-peers
     targetPort: 9735
-  type: LoadBalancer
   loadBalancerIP: 35.186.169.52

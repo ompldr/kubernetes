@@ -106,11 +106,11 @@ metadata:
   labels:
     app: bitcoind
 spec:
+  type: LoadBalancer
   selector:
     app: bitcoind
   ports:
   - port: 18333
     name: bitcoind
     targetPort: 18333
-  type: LoadBalancer
   loadBalancerIP: 35.230.174.122
