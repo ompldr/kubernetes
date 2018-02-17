@@ -43,7 +43,7 @@ data:
         cafile = "/ssl-certs/OmpAuth.crt"
         host = "lnd-internal.default"
         port = 10009
-        macaroonPath = "/ssl-certs/admin.macaroon"
+        macaroonPath = "/macaroons/admin.macaroon"
       }
     }
 ---
@@ -56,6 +56,7 @@ metadata:
     run: periodic-service
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: periodic-service
@@ -71,6 +72,9 @@ spec:
       - name: ssl-certs
         secret:
           secretName: ssl-certs
+      - name: macaroons
+        secret:
+          secretName: macaroons
       containers:
       - name: server
         image: us.gcr.io/ompldr/server:latest
@@ -119,4 +123,7 @@ spec:
           readOnly: true
         - name: ssl-certs
           mountPath: /ssl-certs
+          readOnly: true
+        - name: macaroons
+          mountPath: /macaroons
           readOnly: true
