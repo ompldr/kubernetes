@@ -1,0 +1,7 @@
+.gitsecret/keys/random_seed
+secrets.yaml
+ssl-certs.yaml
+us-east4-macaroons.yaml
+us-west1-macaroons.yaml
+mci*
+zpkubeconfig

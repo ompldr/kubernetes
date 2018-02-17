@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: web
+    kubernetes.io/ingress.class: gce-multi-cluster
+  labels:
+    app: web
+  name: web-ingress
+spec:
+  backend:
+    serviceName: web-svc
+    servicePort: 80

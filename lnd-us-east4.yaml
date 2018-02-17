@@ -1,0 +1,134 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: lnd-1
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  gcePersistentDisk:
+    pdName: lnd-1
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lnd-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: lnd
+spec:
+  serviceName: lnd
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: lnd
+    spec:
+      containers:
+      - name: lnd
+        image: us.gcr.io/ompldr/lnd:latest
+        args: [
+          "--configfile=/lnd/lnd.conf",
+          "--externalip=35.186.169.52",
+          "--noencryptwallet",
+          "--bitcoin.active",
+          "--bitcoin.testnet",
+          "--alias=ompldr-us-east",
+          "--bitcoin.node=bitcoind",
+          "--bitcoind.rpchost=bitcoind-internal.default",
+          "--bitcoind.rpcuser=whatup",
+          "--bitcoind.rpcpass=bro",
+          "--bitcoind.zmqpath=tcp://bitcoind-internal.default:18501",
+          "--tlscertpath=/ssl-certs/lnd-internal.default.crt",
+          "--tlskeypath=/ssl-certs/lnd-internal.default.key",
+          "--adminmacaroonpath=/macaroons/admin.macaroon",
+          "--debuglevel=info",
+        ]
+        resources:
+          requests:
+            cpu: "0.5"
+            memory: "1000Mi"
+        ports:
+        - containerPort: 9735
+          name: lnd-peers
+        - containerPort: 10009
+          name: lnd-rpc
+        volumeMounts:
+        - name: lnd-1
+          mountPath: /root/.lnd
+        - name: ssl-certs
+          mountPath: /ssl-certs
+          readOnly: true
+        - name: macaroons
+          mountPath: /macaroons
+          readOnly: true
+        readinessProbe:
+          tcpSocket:
+            port: 10009
+          initialDelaySeconds: 120
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 10009
+          initialDelaySeconds: 120
+          periodSeconds: 5
+      volumes:
+        - name: ssl-certs
+          secret:
+            secretName: ssl-certs
+        - name: macaroons
+          secret:
+            secretName: macaroons
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: lnd-1
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lnd-internal
+  labels:
+    app: lnd
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+spec:
+  selector:
+    app: lnd
+  ports:
+  - port: 10009
+    name: lnd-rpc
+    targetPort: 10009
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lnd-external
+  labels:
+    app: lnd
+spec:
+  selector:
+    app: lnd
+  ports:
+  - port: 9735
+    name: lnd-peers
+    targetPort: 9735
+  type: LoadBalancer
+  loadBalancerIP: 35.186.169.52

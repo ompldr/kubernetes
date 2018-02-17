@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: bitcoind-1
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+    - ReadWriteOnce
+  gcePersistentDisk:
+    pdName: bitcoind-1
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcoind-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Gi
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: bitcoind
+spec:
+  serviceName: bitcoind
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bitcoind
+    spec:
+      containers:
+      - name: bitcoind
+        image: us.gcr.io/ompldr/bitcoind:latest
+        args: [
+          "-conf=/bitcoin/bitcoin.conf",
+          "-printtoconsole",
+          "-testnet",
+          "-externalip=35.230.174.122",
+          "-port=18333",
+          "-rpcport=18332",
+        ]
+        resources:
+          requests:
+            cpu: "0.5"
+            memory: "1000Mi"
+        ports:
+        - containerPort: 18333
+          name: bitcoind
+        - containerPort: 18332
+          name: bitcoind-rpc
+        - containerPort: 18501
+          name: bitcoind-zmq
+        volumeMounts:
+        - name: bitcoind-1
+          mountPath: /root/.bitcoin
+        readinessProbe:
+          tcpSocket:
+            port: 18332
+          initialDelaySeconds: 120
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 18332
+          initialDelaySeconds: 120
+          periodSeconds: 5
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: bitcoind-1
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 200Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcoind-internal
+  labels:
+    app: bitcoind
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+spec:
+  selector:
+    app: bitcoind
+  ports:
+  - port: 18332
+    name: bitcoind-rpc
+    targetPort: 18332
+  - port: 18501
+    name: bitcoind-zmq
+    targetPort: 18501
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcoind-external
+  labels:
+    app: bitcoind
+spec:
+  selector:
+    app: bitcoind
+  ports:
+  - port: 18333
+    name: bitcoind
+    targetPort: 18333
+  type: LoadBalancer
+  loadBalancerIP: 35.230.174.122
