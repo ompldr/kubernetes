@@ -20,7 +20,7 @@ spec:
         image: us.gcr.io/ompldr/web:latest
         resources:
           requests:
-            cpu: "0.5"
+            cpu: "0.25"
             memory: "0.5Gi"
         ports:
         - containerPort: 80
