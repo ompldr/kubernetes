@@ -46,6 +46,15 @@ data:
         port = 10009
         macaroonPath = "/macaroons/admin.macaroon"
       }
+      ratelimiter {
+        burst = 15
+        period = 60
+        countLimit = 30
+        redis {
+          host = "redis-master-internal.default"
+          port = 6379
+        }
+      }
     }
 ---
 apiVersion: apps/v1beta2

@@ -15,21 +15,7 @@ kubectl config view --minify --flatten > mcieuwest
 
 KUBECONFIG=mciuseast:mcieuwest kubectl config view --flatten > zpkubeconfig
 
-kubectl --context=gke_ompldr_us-east4-a_ompldr-us-east4 apply -f us-east4-macaroons.yaml
-kubectl --context=gke_ompldr_us-east4-a_ompldr-us-east4 apply -f lnd-us-east4.yaml
-kubectl --context=gke_ompldr_us-east4-a_ompldr-us-east4 apply -f bitcoind-us-east4.yaml
-
-kubectl --context=gke_ompldr_us-west1-a_ompldr-us-west1 apply -f us-west1-macaroons.yaml
-kubectl --context=gke_ompldr_us-west1-a_ompldr-us-west1 apply -f lnd-us-west1.yaml
-kubectl --context=gke_ompldr_us-west1-a_ompldr-us-west1 apply -f bitcoind-us-west1.yaml
-
-for ctx in $(kubectl config get-contexts --kubeconfig=./zpkubeconfig -o name); do
-  kubectl --context="${ctx}" apply -f ssl-certs.yaml
-  kubectl --context="${ctx}" apply -f secrets.yaml
-  kubectl --context="${ctx}" apply -f api-server.yaml
-  kubectl --context="${ctx}" apply -f periodic-service.yaml
-  kubectl --context="${ctx}" apply -f invoice-service.yaml
-done
+sh update.sh
 
 kubemci create api-server --ingress=api-server-ingress.yaml --gcp-project=ompldr --kubeconfig=zpkubeconfig --force
 
