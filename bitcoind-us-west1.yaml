@@ -4,7 +4,7 @@ metadata:
   name: bitcoind-1
 spec:
   capacity:
-    storage: 200Gi
+    storage: 250Gi
   accessModes:
     - ReadWriteOnce
   gcePersistentDisk:
@@ -20,7 +20,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 200Gi
+      storage: 250Gi
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
@@ -79,7 +79,7 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 200Gi
+          storage: 250Gi
 ---
 apiVersion: v1
 kind: Service
