@@ -39,6 +39,7 @@ spec:
         image: us.gcr.io/ompldr/bitcoind:latest
         args: [
           "-conf=/bitcoin/bitcoin.conf",
+          "-disablewallet",
           "-printtoconsole",
           "-testnet",
           "-externalip=35.230.174.122",
